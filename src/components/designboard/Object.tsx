@@ -1,44 +1,93 @@
 "use client"
-import React, { useRef, useEffect } from 'react'
-import { useGLTF } from "@react-three/drei"
+import React, { useRef, useEffect, useState } from 'react'
+import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from 'three'
 
 interface ObjectProps {
   color?: string;
   textureUrl?: string;
+  decals?: Array<{
+    id: string;
+    url: string;
+    position: [number, number, number];
+    scale: number;
+    rotation: number;
+    opacity: number;
+  }>;
 }
 
-const Object: React.FC<ObjectProps> = ({ color, textureUrl }) => {
+const AVAILABLE_TEXTURES = {
+  default: '/models/textures/Material.001_baseColor.png',
+  normal: '/models/textures/Material.001_normal.png',
+}
+
+const Object: React.FC<ObjectProps> = ({ color = '#ffffff', textureUrl }) => {
     const { scene } = useGLTF("/models/scene.gltf")
     const modelRef = useRef<THREE.Group>(null)
+    const [textureError, setTextureError] = useState(false)
+    const [currentTexture, setCurrentTexture] = useState<THREE.Texture | null>(null)
+
+    const getTexturePath = () => {
+        if (!textureUrl) return AVAILABLE_TEXTURES.default
+        return textureUrl
+    }
+
+    const texturePath = getTexturePath()
+
+    const texture = useTexture(texturePath)
 
     useEffect(() => {
-        if (!modelRef.current) return;
+        const handleTextureLoad = () => {
+            setTextureError(false)
+            setCurrentTexture(texture)
+        }
+
+        const handleTextureError = () => {
+            console.error(`Failed to load texture: ${texturePath}`)
+            setTextureError(true)
+            setCurrentTexture(null)
+        }
+
+        if (texture?.image?.complete) {
+            if (texture.image.naturalWidth === 0) {
+                handleTextureError()
+            } else {
+                handleTextureLoad()
+            }
+        } else {
+            texture.image.onload = handleTextureLoad
+            texture.image.onerror = handleTextureError
+        }
+
+        return () => {
+            if (texture?.image) {
+                texture.image.onload = null
+                texture.image.onerror = null
+            }
+        }
+    }, [texture, texturePath])
+
+    useEffect(() => {
+        if (!modelRef.current) return
 
         modelRef.current.traverse((child) => {
             if (child instanceof THREE.Mesh && child.material) {
                 const material = child.material as THREE.MeshStandardMaterial;
                 
-                if (color && material.color) {
-                    material.color.set(color);
+                material.color.set(color)
+                
+                if (currentTexture && !textureError) {
+                    material.map = currentTexture
+                    material.map.wrapS = THREE.RepeatWrapping
+                    material.map.wrapT = THREE.RepeatWrapping
+                } else {
+                    material.map = null
                 }
                 
-                if (textureUrl) {
-                    new THREE.TextureLoader().load(textureUrl, (texture) => {
-                        texture.wrapS = THREE.RepeatWrapping;
-                        texture.wrapT = THREE.RepeatWrapping;
-                        material.map = texture;
-                        material.needsUpdate = true;
-                    });
-                } else if (textureUrl === '') {
-                    material.map = null;
-                    material.needsUpdate = true;
-                }
-                
-                material.needsUpdate = true;
+                material.needsUpdate = true
             }
-        });
-    }, [color, textureUrl]);
+        })
+    }, [color, currentTexture, textureError])
 
     return (
         <primitive ref={modelRef} object={scene} scale={2} />

@@ -26,17 +26,18 @@ const TextObject = forwardRef<THREE.Mesh, TextObjectProps>(({
     onDoubleClick
 }, ref) => {
     const textRef = useRef<THREE.Mesh>(null)
-    const localRef = ref || textRef
+    const localRef = (ref as React.RefObject<THREE.Mesh>) || textRef
 
     useFrame(({ camera }) => {
-        if ((localRef as React.RefObject<THREE.Mesh>).current) {
-            (localRef as React.RefObject<THREE.Mesh>).current.lookAt(camera.position)
+        if (localRef.current) {
+            localRef.current.lookAt(camera.position)
         }
     })
 
+    // Simple font mapping
     const getFontUrl = (fontFamily: string) => {
         const fontMap: { [key: string]: string } = {
-            'Arial': 'https://fonts.gstatic.com/s/arial/v18/', // Fallback
+            'Arial': 'https://fonts.gstatic.com/s/arial/v18/',
             'Helvetica': 'https://fonts.gstatic.com/s/helvetica/v19/',
             'Times New Roman': 'https://fonts.gstatic.com/s/times/v20/',
             'Georgia': 'https://fonts.gstatic.com/s/georgia/v17/',
@@ -70,7 +71,7 @@ const TextObject = forwardRef<THREE.Mesh, TextObjectProps>(({
         <Text
             ref={localRef}
             position={position}
-            fontSize={fontSize / 80} 
+            fontSize={fontSize / 100}
             color={color}
             font={getFontUrl(fontFamily)}
             anchorX="center"
@@ -85,8 +86,8 @@ const TextObject = forwardRef<THREE.Mesh, TextObjectProps>(({
                 opacity={isSelected ? 0.9 : 1}
             />
             {isSelected && (
-                <mesh>
-                    <planeGeometry args={[content.length * (fontSize / 80) * 0.6, fontSize / 60]} />
+                <mesh position={[0, 0, -0.01]}>
+                    <planeGeometry args={[content.length * (fontSize / 100) * 0.6, fontSize / 80]} />
                     <meshBasicMaterial 
                         color="#3b82f6" 
                         transparent 
