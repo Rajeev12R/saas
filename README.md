@@ -97,10 +97,7 @@ App will be live at [http://localhost:3000](http://localhost:3000).
 ---
 
 ## 📸 Preview
-
-| **DesignBar**                                 | **Sidebar**                              | **Canvas**                             |
-| --------------------------------------------- | ---------------------------------------- | -------------------------------------- |
-| ![Design Bar](docs/screenshots/designbar.png) | ![Sidebar](docs/screenshots/sidebar.png) | ![Canvas](docs/screenshots/canvas.png) |
+<img width="2878" height="1558" alt="Screenshot 2025-10-03 at 1 03 27 AM" src="https://github.com/user-attachments/assets/4e522f44-7dec-4e22-9b25-8f341f096155" />
 
 ---
 
