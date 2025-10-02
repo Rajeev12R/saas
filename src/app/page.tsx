@@ -1,6 +1,6 @@
 import React from 'react'
-import Navbar from '@/components/layout/Navbar'
-import LandingPage from '@/components/home/LandingPage'
+import Navbar from '../components/layout/Navbar'
+import LandingPage from '../components/home/LandingPage'
 const page = () => {
   return (
     <div className='text-foreground flex flex-col w-screen h-screen overflow-x-hidden'>

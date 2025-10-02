@@ -3,6 +3,20 @@ import React from "react"
 import { MdOutlineImage } from "react-icons/md"
 
 const Sidebar = () => {
+  const handleTextureSelect = (textureUrl: string) => {
+    const event = new CustomEvent('modelTextureChange', { 
+      detail: { texture: textureUrl } 
+    })
+    window.dispatchEvent(event)
+  }
+
+  const handleRemoveTexture = () => {
+    const event = new CustomEvent('modelTextureChange', { 
+      detail: { texture: '' } 
+    })
+    window.dispatchEvent(event)
+  }
+
   return (
     <div className="left w-64 h-full bg-white flex flex-col gap-8 p-6 border-r border-gray-200 shadow-sm">
       <div>
@@ -10,13 +24,26 @@ const Sidebar = () => {
           Textures
         </h3>
         <div className="flex items-center gap-3 flex-wrap">
-          {["#f87171", "#60a5fa", "#34d399", "#fbbf24"].map((color, idx) => (
+          <button
+            onClick={handleRemoveTexture}
+            className="w-10 h-10 rounded-lg shadow-sm hover:scale-105 transition-transform border border-gray-200 bg-white flex items-center justify-center"
+            title="No Texture"
+          >
+            <span className="text-xs text-gray-500">X</span>
+          </button>
+          {[
+            "/models/textures/Material.001_baseColor.png",
+            "/models/textures/Material.001_metallicRoughness.png", 
+            "/models/textures/Material.001_normal.png",
+          ].map((textureUrl, idx) => (
             <button
               key={idx}
-              className="w-10 h-10 rounded-lg shadow-sm hover:scale-105 transition-transform border border-gray-200"
-              style={{ backgroundColor: color }}
+              onClick={() => handleTextureSelect(textureUrl)}
+              className="w-10 h-10 rounded-lg shadow-sm hover:scale-105 transition-transform border border-gray-200 bg-gray-200"
               title={`Texture ${idx + 1}`}
-            />
+            >
+              <div className="w-full h-full rounded-lg bg-gradient-to-br from-gray-300 to-gray-500" />
+            </button>
           ))}
         </div>
       </div>

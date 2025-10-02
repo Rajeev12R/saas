@@ -1,5 +1,5 @@
 "use client"
-import React, { useRef } from 'react'
+import React, { useRef, forwardRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Text } from '@react-three/drei'
 import * as THREE from 'three'
@@ -12,35 +12,93 @@ interface TextObjectProps {
     position: [number, number, number];
     isSelected?: boolean;
     onPointerDown?: (event: any) => void;
+    onDoubleClick?: () => void;
 }
 
-const TextObject: React.FC<TextObjectProps> = ({content, fontSize, fontFamily, color, position, isSelected = false, onPointerDown}) => {
+const TextObject = forwardRef<THREE.Mesh, TextObjectProps>(({
+    content, 
+    fontSize, 
+    fontFamily, 
+    color, 
+    position, 
+    isSelected = false, 
+    onPointerDown,
+    onDoubleClick
+}, ref) => {
     const textRef = useRef<THREE.Mesh>(null)
+    const localRef = ref || textRef
 
     useFrame(({ camera }) => {
-        if (textRef.current) {
-            textRef.current.lookAt(camera.position)
+        if ((localRef as React.RefObject<THREE.Mesh>).current) {
+            (localRef as React.RefObject<THREE.Mesh>).current.lookAt(camera.position)
         }
     })
 
+    const getFontUrl = (fontFamily: string) => {
+        const fontMap: { [key: string]: string } = {
+            'Arial': 'https://fonts.gstatic.com/s/arial/v18/', // Fallback
+            'Helvetica': 'https://fonts.gstatic.com/s/helvetica/v19/',
+            'Times New Roman': 'https://fonts.gstatic.com/s/times/v20/',
+            'Georgia': 'https://fonts.gstatic.com/s/georgia/v17/',
+            'Courier New': 'https://fonts.gstatic.com/s/courier/v22/',
+            'Verdana': 'https://fonts.gstatic.com/s/verdana/v17/',
+            'Trebuchet MS': 'https://fonts.gstatic.com/s/trebuchet/v15/',
+            'Open Sans': 'https://fonts.gstatic.com/s/opensans/v34/'
+        }
+        
+        return fontMap[fontFamily] || fontMap['Arial']
+    }
+
+    let clickTimeout: NodeJS.Timeout | null = null
+
+    const handlePointerDown = (e: any) => {
+        e.stopPropagation()
+        
+        if (clickTimeout) {
+            clearTimeout(clickTimeout)
+            clickTimeout = null
+            onDoubleClick?.()
+        } else {
+            clickTimeout = setTimeout(() => {
+                clickTimeout = null
+                onPointerDown?.(e)
+            }, 300)
+        }
+    }
+
     return (
         <Text
-            ref={textRef}
+            ref={localRef}
             position={position}
-            fontSize={fontSize / 100}
+            fontSize={fontSize / 80} 
             color={color}
-            font={`https://fonts.gstatic.com/s/${fontFamily.toLowerCase().replace(/ /g, '')}/v18/*`}
+            font={getFontUrl(fontFamily)}
             anchorX="center"
             anchorY="middle"
-            onPointerDown={onPointerDown}
+            onPointerDown={handlePointerDown}
         >
             {content}
             <meshBasicMaterial
                 toneMapped={false}
                 side={THREE.DoubleSide}
+                transparent={true}
+                opacity={isSelected ? 0.9 : 1}
             />
+            {isSelected && (
+                <mesh>
+                    <planeGeometry args={[content.length * (fontSize / 80) * 0.6, fontSize / 60]} />
+                    <meshBasicMaterial 
+                        color="#3b82f6" 
+                        transparent 
+                        opacity={0.2} 
+                        side={THREE.DoubleSide}
+                    />
+                </mesh>
+            )}
         </Text>
     )
-}
+})
+
+TextObject.displayName = 'TextObject'
 
 export default TextObject
