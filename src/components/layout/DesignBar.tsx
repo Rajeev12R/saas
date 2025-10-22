@@ -1,3 +1,4 @@
+// src/components/layout/DesignBar.tsx
 "use client"
 import React, { useState, useEffect } from 'react'
 import {
@@ -6,7 +7,8 @@ import {
   MdOutlineAirplay,
   MdOutlineShare,
   MdOutlineHome,
-  MdOutlineDashboardCustomize
+  MdOutlineDashboardCustomize,
+  MdOutlineTransform
 } from "react-icons/md"
 import ColorPicker from './layoutelement/ColorPicker'
 import FontPicker from './layoutelement/FontPicker'
@@ -16,6 +18,8 @@ const DesignBar = () => {
   const [fontSize, setFontSize] = useState(24)
   const [fontFamily, setFontFamily] = useState('Arial')
   const [modelColor, setModelColor] = useState('#ffffff')
+  const [textScale, setTextScale] = useState(1)
+  const [textRotation, setTextRotation] = useState(0)
 
   useEffect(() => {
     const event = new CustomEvent('updateSelectedText', { 
@@ -28,23 +32,26 @@ const DesignBar = () => {
     window.dispatchEvent(event)
   }, [fontSize, fontFamily, textColor])
 
-  const handleAddText = () => {
-    const event = new CustomEvent('activateTextMode', { 
-      detail: { 
-        fontSize, 
-        fontFamily, 
-        color: textColor 
-      } 
-    })
-    window.dispatchEvent(event)
-  }
-
   const handleModelColorChange = (newColor: string) => {
     setModelColor(newColor)
     const event = new CustomEvent('modelColorChange', { 
       detail: { color: newColor } 
     })
     window.dispatchEvent(event)
+  }
+
+  const handleTextTransform = (transform: { scale?: number; rotation?: number }) => {
+    const event = new CustomEvent('textTransform', { 
+      detail: transform 
+    })
+    window.dispatchEvent(event)
+
+    if (transform.scale !== undefined) {
+      setTextScale(transform.scale)
+    }
+    if (transform.rotation !== undefined) {
+      setTextRotation(transform.rotation)
+    }
   }
 
   return (
@@ -67,18 +74,11 @@ const DesignBar = () => {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <button
-            title="Add Text"
-            onClick={handleAddText}
-            className="flex items-center gap-2 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-          >
-            <MdOutlineTextFormat size={20} />
-            <span className="text-sm font-medium">Add Text</span>
-          </button>
-
+          {/* Text Controls Section */}
           <div className="flex items-center gap-2 pl-4 border-l border-gray-200">
             <span className="text-sm text-gray-600 font-medium">Text:</span>
             
+            {/* Font Size */}
             <div className="relative" title='Font Size'>
               <select
                 value={fontSize}
@@ -95,14 +95,58 @@ const DesignBar = () => {
               />
             </div>
 
+            {/* Font Family */}
             <FontPicker
               activeFontFamily={fontFamily}
               onChange={(font) => setFontFamily(font.family)}
             />
             
+            {/* Text Color */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500">Color:</span>
               <ColorPicker color={textColor} onChange={setTextColor} />
+            </div>
+
+            {/* Text Scale */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Scale:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleTextTransform({ scale: Math.max(0.1, textScale - 0.1) })}
+                  className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200 text-sm"
+                >
+                  -
+                </button>
+                <span className="text-xs w-8 text-center">{textScale.toFixed(1)}</span>
+                <button
+                  onClick={() => handleTextTransform({ scale: Math.min(3, textScale + 0.1) })}
+                  className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200 text-sm"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Text Rotation */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Rotate:</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleTextTransform({ rotation: textRotation - 0.1 })}
+                  className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200 text-sm"
+                >
+                  ↶
+                </button>
+                <span className="text-xs w-8 text-center">
+                  {Math.round(textRotation * 180 / Math.PI)}°
+                </span>
+                <button
+                  onClick={() => handleTextTransform({ rotation: textRotation + 0.1 })}
+                  className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200 text-sm"
+                >
+                  ↷
+                </button>
+              </div>
             </div>
           </div>
 
@@ -130,13 +174,6 @@ const DesignBar = () => {
           >
             <span className="hidden sm:inline">Present</span>
             <MdOutlineAirplay size={18} />
-          </button>
-          <button
-            title="Export"
-            className="flex items-center gap-1.5 py-1.5 px-4 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-all shadow-sm"
-          >
-            <span className="hidden sm:inline">Export</span>
-            <MdOutlineKeyboardArrowDown size={16} />
           </button>
         </div>
       </div>
